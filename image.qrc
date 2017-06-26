@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/">
+        <file>source/file.png</file>
+        <file>source/link.png</file>
+        <file>source/SoftRainBlue.css</file>
+        <file>source/dir.png</file>
+        <file>source/check_1.png</file>
+        <file>source/check_2.png</file>
+        <file>source/check_box_1.png</file>
+        <file>source/check_box_2.png</file>
+        <file>source/radio_1.png</file>
+        <file>source/radio_2.png</file>
+    </qresource>
+</RCC>
