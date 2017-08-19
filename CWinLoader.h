@@ -1,3 +1,11 @@
+/*******************************************************************************
+ * Copyright [2017]   <青岛艾普智能仪器有限公司>
+ * All rights reserved.
+ *
+ * version:     0.1
+ * author:      zhaonanlin
+ * brief:       CAN自动升级程序
+*******************************************************************************/
 #ifndef CWINLOADER_H
 #define CWINLOADER_H
 
@@ -11,7 +19,6 @@
 #include <linux/can/raw.h>
 #include <linux/netlink.h>
 #include <errno.h>
-#include <string.h>
 #include <unistd.h>
 #include <netinet/in.h>
 #include <net/if.h>
@@ -35,8 +42,6 @@
 #include <QElapsedTimer>
 #include <QDragEnterEvent>
 #include <QTranslator>
-
-#include <QSettings>
 
 #define NET "/mnt/network/"
 #define TMP "./temp/"
@@ -86,6 +91,12 @@ private slots:
     void Delay(int ms);
     void on_tabSoftware_cellClicked(int row, int column);
 
+    void on_tabDevice_clicked(const QModelIndex &index);
+
+    void on_pushButton_clicked();
+
+    void on_pushButton_2_clicked();
+
 private:
     QButtonGroup *btnGroup;
     QSettings *setting;
@@ -99,7 +110,6 @@ private:
     int id;
 
     QTranslator *translator;
-
 };
 
 #endif // CWINLOADER_H

@@ -20,3 +20,6 @@ HEADERS  += \
 
 FORMS    += \
     CWinLoader.ui
+
+RESOURCES += \
+    image.qrc

@@ -1,11 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2016,青岛艾普智能仪器有限公司
+ * Copyright [2017]   <青岛艾普智能仪器有限公司>
  * All rights reserved.
  *
- * version:     0.6
- * author:      link
- * date:        2016.09.28
- * brief:       自动调试工具
+ * version:     0.1
+ * author:      zhaonanlin
+ * brief:       CAN自动升级程序
 *******************************************************************************/
 #include "CWinLoader.h"
 #include "ui_CWinLoader.h"
@@ -20,12 +19,13 @@ CWinLoader::CWinLoader(QWidget *parent) :
     ui(new Ui::CWinLoader)
 {
     ui->setupUi(this);
+    SendMsg("CAN口升级工具V-0.0.0.2\n");
     WinInit();
     KeyInit();
     DatInit();
     CanInit();
     timer = new QTimer(this);
-    connect(timer,SIGNAL(timeout()),this,SLOT(CanRead()));
+    connect(timer, SIGNAL(timeout()), this, SLOT(CanRead()));
 }
 /******************************************************************************
  * version:     1.0
@@ -60,7 +60,7 @@ void CWinLoader::KeyInit()
     btnGroup->addButton(ui->KeyStart, Qt::Key_A);
     //    btnGroup->addButton(ui->KeyReset, Qt::Key_B);
     btnGroup->addButton(ui->KeyExit,  Qt::Key_E);
-    connect(btnGroup,SIGNAL(buttonClicked(int)),this,SLOT(KeyJudge(int)));
+    connect(btnGroup, SIGNAL(buttonClicked(int)), this, SLOT(KeyJudge(int)));
 }
 /******************************************************************************
  * version:     1.0
@@ -113,11 +113,11 @@ void CWinLoader::DatInit()
     dir.setFilter(QDir::Dirs|QDir::Files);
     dir.setSorting(QDir::DirsFirst);
     QFileInfoList list = dir.entryInfoList();
-    for (int i=0; i<list.size(); i++) {
+    for (int i=0; i < list.size(); i++) {
         if (list.at(i).fileName().contains(".bin")) {
             ui->tabSoftware->setRowCount(ui->tabSoftware->rowCount()+1);
-            ui->tabSoftware->setItem(ui->tabSoftware->rowCount()-1,0,new QTableWidgetItem);
-            ui->tabSoftware->item(ui->tabSoftware->rowCount()-1,0)->setText(list.at(i).filePath());
+            ui->tabSoftware->setItem(ui->tabSoftware->rowCount()-1, 0, new QTableWidgetItem);
+            ui->tabSoftware->item(ui->tabSoftware->rowCount()-1, 0)->setText(list.at(i).filePath());
         }
     }
     dir.setPath(QString(USB));
@@ -126,11 +126,11 @@ void CWinLoader::DatInit()
         return;
     }
     list = dir.entryInfoList();
-    for (int i=0; i<list.size(); i++) {
+    for (int i=0; i < list.size(); i++) {
         if (list.at(i).fileName().contains(".bin")) {
             ui->tabSoftware->setRowCount(ui->tabSoftware->rowCount()+1);
-            ui->tabSoftware->setItem(ui->tabSoftware->rowCount()-1,0,new QTableWidgetItem);
-            ui->tabSoftware->item(ui->tabSoftware->rowCount()-1,0)->setText(list.at(i).filePath());
+            ui->tabSoftware->setItem(ui->tabSoftware->rowCount()-1, 0, new QTableWidgetItem);
+            ui->tabSoftware->item(ui->tabSoftware->rowCount()-1, 0)->setText(list.at(i).filePath());
         }
     }
 }
@@ -142,34 +142,10 @@ void CWinLoader::DatInit()
 ******************************************************************************/
 void CWinLoader::IDInit()
 {
-    if (ui->tabDevice->currentItem()->text() == tr("电阻"))
-        id = 0x02;
-    else if (ui->tabDevice->currentItem()->text() == tr("耐压"))
-        id = 0x03;
-    else if (ui->tabDevice->currentItem()->text() == tr("匝间"))
-        id = 0x04;
-    else if (ui->tabDevice->currentItem()->text() == tr("功率"))
-        id = 0x05;
-    else if (ui->tabDevice->currentItem()->text() == tr("电感"))
-        id = 0x06;
-    else if (ui->tabDevice->currentItem()->text() == tr("备用07"))
-        id = 0x07;
-    else if (ui->tabDevice->currentItem()->text() == tr("备用08"))
-        id = 0x08;
-    else if (ui->tabDevice->currentItem()->text() == tr("备用09"))
-        id = 0x09;
-    else if (ui->tabDevice->currentItem()->text() == tr("输出1"))
-        id = 0x13;
-    else if (ui->tabDevice->currentItem()->text() == tr("输出2"))
-        id = 0x14;
-    else if (ui->tabDevice->currentItem()->text() == tr("输出3"))
-        id = 0x15;
-    else if (ui->tabDevice->currentItem()->text() == tr("输出4"))
-        id = 0x16;
-    else if (ui->tabDevice->currentItem()->text() == tr("输出5"))
-        id = 0x17;
-    else
-        id = 0x01;
+    QString temp = ui->dev_id->text();
+    bool ok;
+    id = temp.toInt(&ok, 16);
+    qDebug() << "id:" << id;
 }
 /******************************************************************************
  * version:     1.0
@@ -182,18 +158,18 @@ void CWinLoader::CanInit()
     struct sockaddr_can     addr;
     struct ifreq            ifr;
     s = socket(PF_CAN, SOCK_RAW, CAN_RAW);  /*打开套接字*/
-    if (s < 0){
+    if (s < 0) {
         SendMsg("Error while opening socket\n");
         return;
     }
-    strcpy(ifr.ifr_name, "can0" );
-    if (ioctl(s, SIOCGIFINDEX, &ifr) < 0){
+    strcpy(ifr.ifr_name, "can0");
+    if (ioctl(s, SIOCGIFINDEX, &ifr) < 0) {
         SendMsg("Error while opening can0\n");
         return;
     }
     addr.can_family = AF_CAN;
     addr.can_ifindex = ifr.ifr_ifindex;
-    if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) < 0){
+    if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         SendMsg("Error in socket bind\n");
         return;
     }
@@ -217,10 +193,10 @@ bool CWinLoader::CanReadFrame()
     tv.tv_sec  = 0;
     tv.tv_usec = 0;
     ret = select(s+1, &rdfds, NULL, NULL, &tv);
-    if (ret <= 0){
+    if (ret <= 0) {
         return false;
     }
-    if (FD_ISSET(s, &rdfds)){
+    if (FD_ISSET(s, &rdfds)) {
         nbytes = read(s, &RxMsg, sizeof(struct can_frame));
         return true;
     }
@@ -236,7 +212,7 @@ bool CWinLoader::CanWriteFrame(can_frame TxMsg)
 {
     int nbytes;
     nbytes = write(s, &TxMsg, sizeof(struct can_frame));
-    if (nbytes != sizeof(struct can_frame)){
+    if (nbytes != sizeof(struct can_frame)) {
         perror("can raw socket write");
         SendMsg("can raw socket write Error");
         return false;
@@ -254,13 +230,13 @@ bool CWinLoader::CanWrite(QByteArray msg)
     QByteArray frame;
     can_frame  TxMsg;
     TxMsg.can_id = id;
-    for (int i=0; i<msg.size(); i+=8) {
-        frame = msg.mid(i,8);
+    for (int i=0; i < msg.size(); i+=8) {
+        frame = msg.mid(i, 8);
         TxMsg.can_dlc = frame.size();
-        for (int t=0; t<frame.size(); t++) {
+        for (int t=0; t < frame.size(); t++) {
             TxMsg.data[t] = frame.at(t);
         }
-        if(CanWriteFrame(TxMsg))
+        if (CanWriteFrame(TxMsg))
             Delay(1);
         else
             return false;
@@ -289,16 +265,16 @@ void CWinLoader::FileRead()
 {
     text = file->read(1024);
     if (file->atEnd()) {
-        for (int i=text.size(); i<1024; i++)
+        for (int i=text.size(); i < 1024; i++)
             text.append(0xff);
     }
     quint8 crc = 0;
-    for (int i=0; i<1024; i++)
+    for (int i=0; i < 1024; i++)
         crc+= text[i];
-    text.insert(0,'S');
-    text.insert(1,page);
-    text.insert(2,!page);
-    text.insert(3,crc);
+    text.insert(0, 'S');
+    text.insert(1, page);
+    text.insert(2, !page);
+    text.insert(3, crc);
 }
 /******************************************************************************
  * version:     1.0
@@ -310,7 +286,7 @@ void CWinLoader::CanRead()
 {
     QByteArray ack;
     if (CanReadFrame()) {
-        for (int i=0; i<RxMsg.can_dlc; i++) {
+        for (int i=0; i < RxMsg.can_dlc; i++) {
             ack.append(RxMsg.data[i]);
         }
         switch (ack.at(0)) {
@@ -351,14 +327,14 @@ void CWinLoader::CanRead()
             step = QUIT;
             break;
         case 'V':
-            ack = ack.mid(1,3);
-            if (ack.toDouble()<0.5) {
-                ack.insert(0,tr("Bootloader版本V"));
+            ack = ack.mid(1, 3);
+            if (ack.toDouble() < 0.5) {
+                ack.insert(0, tr("Bootloader版本V"));
                 ack.append(tr("    该版本无法使用加密功能\n"));
                 SendMsg(ack);
                 break;
             } else {
-                ack.insert(0,tr("Bootloader版本V"));
+                ack.insert(0, tr("Bootloader版本V"));
                 ack.append("\n");
                 SendMsg(ack);
             }
@@ -379,11 +355,13 @@ void CWinLoader::CanRead()
         if (ack.isEmpty())
             break;
         FileRead();
-        SendMsg(QString(tr("正在写入第%1帧数据......   ")).arg(page+1, 2, 10, QChar('0')).toUtf8());
+        SendMsg(QString(tr("正在写入第%1帧数据......   ")).
+                arg(page+1, 2, 10, QChar('0')).toUtf8());
         CanWrite(text);
         break;
     case FAIL:
-        SendMsg(QString(tr("重新写入第%1帧数据......   ")).arg(page+1, 2, 10, QChar('0')).toUtf8());
+        SendMsg(QString(tr("重新写入第%1帧数据......   ")).
+                arg(page+1, 2, 10, QChar('0')).toUtf8());
         CanWrite(text);
         break;
     case OVER:
@@ -423,7 +401,7 @@ void CWinLoader::Delay(int ms)
 {
     QElapsedTimer t;
     t.start();
-    while(t.elapsed()<ms)
+    while (t.elapsed() < ms)
         QCoreApplication::processEvents();
 }
 /******************************************************************************
@@ -438,4 +416,55 @@ void CWinLoader::on_tabSoftware_cellClicked(int , int )
     if (temp.contains(".bin")) {
         ui->textFile->setText(temp);
     }
+}
+
+void CWinLoader::on_tabDevice_clicked(const QModelIndex &index)
+{
+    int row = index.row();
+    qDebug() << row;
+    int id = 0;
+
+    if (ui->tabDevice->currentItem()->text() == tr("电阻"))
+        id = 0x02;
+    else if (ui->tabDevice->currentItem()->text() == tr("耐压"))
+        id = 0x03;
+    else if (ui->tabDevice->currentItem()->text() == tr("匝间"))
+        id = 0x04;
+    else if (ui->tabDevice->currentItem()->text() == tr("电感"))
+        id = 0x06;
+    else if (ui->tabDevice->currentItem()->text() == tr("功率"))
+        id = 0x07;
+    else if (ui->tabDevice->currentItem()->text() == tr("电源切换"))
+        id = 0x09;
+    else if (ui->tabDevice->currentItem()->text() == tr("电源切换"))
+        id = 0x09;
+    else if (ui->tabDevice->currentItem()->text() == tr("功放"))
+        id = 0x0A;
+    else if (ui->tabDevice->currentItem()->text() == tr("BLDC-PG"))
+        id = 0x0B;
+    else if (ui->tabDevice->currentItem()->text() == tr("BLDC-WD"))
+        id = 0x0C;
+    else if (ui->tabDevice->currentItem()->text() == tr("输出1"))
+        id = 0x13;
+    else if (ui->tabDevice->currentItem()->text() == tr("输出2"))
+        id = 0x14;
+    else
+        id = 0x01;
+    ui->dev_id->setText(QString("%1").arg(id, 2, 16, QLatin1Char('0')).toUpper());
+}
+
+void CWinLoader::on_pushButton_clicked()
+{
+    QString temp = ui->dev_id->text();
+    bool ok;
+    int id = temp.toInt(&ok, 16) + 1;
+    ui->dev_id->setText(QString("%1").arg(id, 2, 16, QLatin1Char('0')).toUpper());
+}
+
+void CWinLoader::on_pushButton_2_clicked()
+{
+    QString temp = ui->dev_id->text();
+    bool ok;
+    int id = temp.toInt(&ok, 16) - 1;
+    ui->dev_id->setText(QString("%1").arg(id, 2, 16, QLatin1Char('0')).toUpper());
 }
